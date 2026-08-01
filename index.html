@@ -252,8 +252,7 @@ input[type=range] { flex: 1; accent-color: var(--tok); cursor: pointer; }
         <div class="opts-row">
           <button class="opt-btn" id="opt-xbp" onclick="toggle('opt-xbp');calc()">Ikut XBP (Growth Xtra)</button>
           <button class="opt-btn" id="opt-afiliasi" onclick="toggle('opt-afiliasi');calc()">Komisi Afiliasi</button>
-          <button class="opt-btn" id="opt-pph-tok" onclick="toggle('opt-pph-tok');calc()">PPh 22 PKP</button>
-          <button class="opt-btn" id="opt-pph-tok-np" onclick="toggle('opt-pph-tok-np');calc()">PPh 22 Non-PKP</button>
+          <button class="opt-btn" id="opt-pph-tok" onclick="toggle('opt-pph-tok');calc()">PPh 22 (PKP)</button>
         </div>
       </div>
 
@@ -268,8 +267,7 @@ input[type=range] { flex: 1; accent-color: var(--tok); cursor: pointer; }
           <button class="opt-btn on" id="opt-xtra" onclick="toggle('opt-xtra');calc()">Promo XTRA</button>
           <button class="opt-btn on" id="opt-go" onclick="toggle('opt-go');calc()">GO XTRA</button>
           <button class="opt-btn" id="opt-asuransi" onclick="toggle('opt-asuransi');calc()">Asuransi</button>
-          <button class="opt-btn" id="opt-pph-shp" onclick="toggle('opt-pph-shp');calc()">PPh 22 PKP</button>
-          <button class="opt-btn" id="opt-pph-shp-np" onclick="toggle('opt-pph-shp-np');calc()">PPh 22 Non-PKP</button>
+          <button class="opt-btn" id="opt-pph-shp" onclick="toggle('opt-pph-shp');calc()">PPh 22 (PKP)</button>
         </div>
       </div>
     </div>
@@ -552,7 +550,7 @@ function calcTokFromHJ(hj) {
   const afl_rate  = afl_on ? (parseFloat(document.getElementById('afiliasi-rate').value)||0)/100 : 0;
   const afiliasi  = afl_on ? Math.round(hj * afl_rate) : 0;
   const proses    = s.proses;
-  const pph_tok   = on('opt-pph-tok') ? Math.round(hj / 1.11 * 0.005) : on('opt-pph-tok-np') ? Math.round(hj * 0.005) : 0;
+  const pph_tok   = on('opt-pph-tok') ? Math.round(hj / 1.11 * 0.005) : 0;
   const total     = komisi + mall + dinamis + cashback + afiliasi + pph_tok + proses;
   return { hj, komisi, mall, dinamis, cashback, afiliasi, pph_tok, proses, total, net: hj - total, xbp, afl_on };
 }
@@ -566,7 +564,7 @@ function calcTok(modal, pct) {
 
   // Case A: dinamis not capped
   const afl = on('opt-afiliasi') ? (parseFloat(document.getElementById('afiliasi-rate').value)||0)/100 : 0;
-  const pph_tok_r = on('opt-pph-tok') ? (0.005/1.11) : on('opt-pph-tok-np') ? 0.005 : 0;
+  const pph_tok_r = on('opt-pph-tok') ? (0.005/1.11) : 0;
   const denom_A = 1 - s.komisi - s.dinamis - cb - afl - pph_tok_r;
   const hjA = Math.ceil((target + s.mall + s.proses) / denom_A);
   // Case B: dinamis capped
@@ -590,7 +588,7 @@ function calcShpFromHJ(hj) {
   const layanan = Math.min(promoX + goX, hj * s.layanan);
   const premi   = asuransi ? hj * s.premi : 0;
   const proses  = s.proses;
-  const pph_shp = on('opt-pph-shp') ? Math.round(hj / 1.11 * 0.005) : on('opt-pph-shp-np') ? Math.round(hj * 0.005) : 0;
+  const pph_shp = on('opt-pph-shp') ? Math.round(hj / 1.11 * 0.005) : 0;
   const total   = admin + layanan + premi + pph_shp + proses;
   return { hj, admin, promoX, goX, layanan, premi, pph_shp, proses, total, net: hj - total };
 }
