@@ -252,7 +252,6 @@ input[type=range] { flex: 1; accent-color: var(--tok); cursor: pointer; }
         <div class="opts-row">
           <button class="opt-btn" id="opt-xbp" onclick="toggle('opt-xbp');calc()">Ikut XBP (Growth Xtra)</button>
           <button class="opt-btn" id="opt-afiliasi" onclick="toggle('opt-afiliasi');calc()">Komisi Afiliasi</button>
-          <button class="opt-btn" id="opt-pph-tok" onclick="toggle('opt-pph-tok');calc()">PPh 22 (PKP)</button>
         </div>
       </div>
 
@@ -267,7 +266,6 @@ input[type=range] { flex: 1; accent-color: var(--tok); cursor: pointer; }
           <button class="opt-btn on" id="opt-xtra" onclick="toggle('opt-xtra');calc()">Promo XTRA</button>
           <button class="opt-btn on" id="opt-go" onclick="toggle('opt-go');calc()">GO XTRA</button>
           <button class="opt-btn" id="opt-asuransi" onclick="toggle('opt-asuransi');calc()">Asuransi</button>
-          <button class="opt-btn" id="opt-pph-shp" onclick="toggle('opt-pph-shp');calc()">PPh 22 (PKP)</button>
         </div>
       </div>
     </div>
@@ -550,9 +548,8 @@ function calcTokFromHJ(hj) {
   const afl_rate  = afl_on ? (parseFloat(document.getElementById('afiliasi-rate').value)||0)/100 : 0;
   const afiliasi  = afl_on ? Math.round(hj * afl_rate) : 0;
   const proses    = s.proses;
-  const pph_tok   = on('opt-pph-tok') ? Math.round(hj / 1.11 * 0.005) : 0;
-  const total     = komisi + mall + dinamis + cashback + afiliasi + pph_tok + proses;
-  return { hj, komisi, mall, dinamis, cashback, afiliasi, pph_tok, proses, total, net: hj - total, xbp, afl_on };
+  const total     = komisi + mall + dinamis + cashback + afiliasi + proses;
+  return { hj, komisi, mall, dinamis, cashback, afiliasi, proses, total, net: hj - total, xbp, afl_on };
 }
 
 function calcTok(modal, pct) {
@@ -564,11 +561,10 @@ function calcTok(modal, pct) {
 
   // Case A: dinamis not capped
   const afl = on('opt-afiliasi') ? (parseFloat(document.getElementById('afiliasi-rate').value)||0)/100 : 0;
-  const pph_tok_r = on('opt-pph-tok') ? (0.005/1.11) : 0;
-  const denom_A = 1 - s.komisi - s.dinamis - cb - afl - pph_tok_r;
+  const denom_A = 1 - s.komisi - s.dinamis - cb - afl;
   const hjA = Math.ceil((target + s.mall + s.proses) / denom_A);
   // Case B: dinamis capped
-  const denom_B = 1 - s.komisi - cb - afl - pph_tok_r;
+  const denom_B = 1 - s.komisi - cb - afl;
   const hjB = Math.ceil((target + s.mall + cap + s.proses) / denom_B);
   // Threshold
   const thresh = cap > 0 ? cap / s.dinamis : Infinity;
@@ -583,14 +579,14 @@ function calcShpFromHJ(hj) {
   const asuransi = on('opt-asuransi');
 
   const admin   = hj * s.admin;
+  const bayar   = 50000;                // flat Rp50.000
   const promoX  = xtra ? s.xtra : 0;   // flat 60000
-  const goX     = go   ? s.go   : 0;   // flat 60000 (bukan % lagi)
+  const goX     = go   ? s.go   : 0;   // flat 60000
   const layanan = Math.min(promoX + goX, hj * s.layanan);
   const premi   = asuransi ? hj * s.premi : 0;
   const proses  = s.proses;
-  const pph_shp = on('opt-pph-shp') ? Math.round(hj / 1.11 * 0.005) : 0;
-  const total   = admin + layanan + premi + pph_shp + proses;
-  return { hj, admin, promoX, goX, layanan, premi, pph_shp, proses, total, net: hj - total };
+  const total   = admin + bayar + layanan + premi + proses;
+  return { hj, admin, bayar, promoX, goX, layanan, premi, proses, total, net: hj - total };
 }
 
 function calcShp(modal, pct) {
@@ -608,7 +604,7 @@ function calcShp(modal, pct) {
   // HJ_flat: both flat, check against 2% cap
   const hjFlat = Math.ceil((target + promoX + goX + s.proses) / (1 - s.admin - premi));
   // If 2%*hjFlat < promoX+goX, then layanan is capped by 2%
-  const hjCap  = Math.ceil((target + s.proses) / (1 - s.admin - s.layanan - premi));
+  const hjCap  = Math.ceil((target + bayar_flat + s.proses) / (1 - s.admin - s.layanan - premi));
   const hj = (promoX + goX) <= hjFlat * s.layanan ? hjFlat : hjCap;
   return calcShpFromHJ(hj);
 }
@@ -632,7 +628,6 @@ function renderTok(t, mode) {
       <div class="detail-item"><span class="dk">Komisi dinamis</span><span class="dv">${rp(t.dinamis)}</span></div>
       ${cashbackRow}
       ${t.afl_on ? `<div class="detail-item"><span class="dk">Komisi afiliasi</span><span class="dv">${rp(t.afiliasi)}</span></div>` : ""}
-      ${t.pph_tok ? `<div class="detail-item"><span class="dk">ISR Income Tax / PPh 22 ${on("opt-pph-tok") ? "(PKP)" : "(Non-PKP)"}</span><span class="dv">${rp(t.pph_tok)}</span></div>` : ""}
       <div class="detail-item"><span class="dk">Biaya proses pesanan</span><span class="dv">${rp(t.proses)}</span></div>
       <div class="detail-item total"><span class="dk">Total biaya</span><span class="dv">${rp(t.total)}</span></div>
     </div>
@@ -657,11 +652,11 @@ function renderShp(s, mode) {
       <span class="net-val shp">${rp(s.net)}</span>
     </div>
     <div class="detail-list">
-      <div class="detail-item"><span class="dk">Biaya administrasi</span><span class="dv">${rp(s.admin)}</span></div>
+      <div class="detail-item"><span class="dk">Biaya administrasi (4.2% incl. PPN)</span><span class="dv">${rp(s.admin)}</span></div>
+      <div class="detail-item"><span class="dk">Biaya pembayaran</span><span class="dv">${rp(s.bayar)}</span></div>
       <div class="detail-item"><span class="dk">Biaya layanan</span><span class="dv">${rp(s.layanan)}</span></div>
       ${subXtra}${subGo}
       ${premiRow}
-      ${s.pph_shp ? `<div class="detail-item"><span class="dk">ISR Income Tax / PPh 22 ${on("opt-pph-shp") ? "(PKP)" : "(Non-PKP)"}</span><span class="dv">${rp(s.pph_shp)}</span></div>` : ""}
       <div class="detail-item"><span class="dk">Biaya proses pesanan</span><span class="dv">${rp(s.proses)}</span></div>
       <div class="detail-item total"><span class="dk">Total biaya</span><span class="dv">${rp(s.total)}</span></div>
     </div>
