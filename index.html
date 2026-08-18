@@ -599,13 +599,10 @@ function calcShp(modal, pct) {
   const goX      = go   ? s.go   : 0;  // flat
   const premi    = asuransi ? s.premi : 0;
 
-  // Simple formula: layanan = promoX + goX (flat, both capped)
-  // Check if layanan would exceed 2%*HJ (rare for normal prices)
-  // HJ_flat: both flat, check against 2% cap
-  const hjFlat = Math.ceil((target + promoX + goX + s.proses) / (1 - s.admin - premi));
-  // If 2%*hjFlat < promoX+goX, then layanan is capped by 2%
-  const hjCap  = Math.ceil((target + bayar_flat + s.proses) / (1 - s.admin - s.layanan - premi));
-  const hj = (promoX + goX) <= hjFlat * s.layanan ? hjFlat : hjCap;
+  const bayar_flat = 50000;
+  const hj_flat = Math.ceil((target + bayar_flat + promoX + goX + s.proses) / (1 - s.admin - premi));
+  const hjCap   = Math.ceil((target + bayar_flat + s.proses) / (1 - s.admin - s.layanan - premi));
+  const hj = (promoX + goX) <= hj_flat * s.layanan ? hj_flat : hjCap;
   return calcShpFromHJ(hj);
 }
 
